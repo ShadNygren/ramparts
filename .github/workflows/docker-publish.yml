@@ -31,10 +31,7 @@ jobs:
         include:
           - dockerfile: Dockerfile
             image_suffix: ""
-            description: "Ramparts MCP Server (stdio mode)"
-          - dockerfile: Deploy-Dockerfile  
-            image_suffix: "-server"
-            description: "Ramparts HTTP Server (web API mode)"
+            description: "Ramparts MCP Server"
 
     steps:
       - name: Checkout repository
@@ -59,10 +56,6 @@ jobs:
         uses: docker/metadata-action@v5
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}${{ matrix.image_suffix }}
-          labels: |
-            org.opencontainers.image.title=Ramparts${{ matrix.image_suffix }}
-            org.opencontainers.image.description=${{ matrix.description }}
-            org.opencontainers.image.vendor=ShadNygren
           tags: |
             type=ref,event=branch
             type=ref,event=pr
@@ -80,7 +73,6 @@ jobs:
           platforms: linux/amd64,linux/arm64
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
           build-args: |
@@ -105,24 +97,16 @@ jobs:
     runs-on: ubuntu-latest
     needs: build-and-push
     if: github.event_name != 'pull_request'
-    
-    strategy:
-      matrix:
-        include:
-          - image_suffix: ""
-            test_command: "--help"
-          - image_suffix: "-server"
-            test_command: "--help"
 
     steps:
       - name: Test Docker image
         run: |
           # Pull the image
-          docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}${{ matrix.image_suffix }}:${{ github.sha }}
+          docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
           
           # Test basic functionality
-          docker run --rm ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}${{ matrix.image_suffix }}:${{ github.sha }} \
-            /app/ramparts ${{ matrix.test_command }}
+          docker run --rm ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }} \
+            /app/ramparts --help
 
   summary:
     name: Build Summary
@@ -137,13 +121,12 @@ jobs:
           echo "| Image | Status | Registry |" >> $GITHUB_STEP_SUMMARY
           echo "|-------|--------|----------|" >> $GITHUB_STEP_SUMMARY
           echo "| ramparts | ${{ needs.build-and-push.result }} | ghcr.io/${{ github.repository }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| ramparts-server | ${{ needs.build-and-push.result }} | ghcr.io/${{ github.repository }}-server |" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### Usage Examples:" >> $GITHUB_STEP_SUMMARY
           echo "\`\`\`bash" >> $GITHUB_STEP_SUMMARY
-          echo "# MCP Server mode" >> $GITHUB_STEP_SUMMARY
+          echo "# MCP Server mode (default)" >> $GITHUB_STEP_SUMMARY
           echo "docker run -it ghcr.io/${{ github.repository }}:latest" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "# HTTP Server mode" >> $GITHUB_STEP_SUMMARY
-          echo "docker run -p 8080:8080 ghcr.io/${{ github.repository }}-server:latest" >> $GITHUB_STEP_SUMMARY
+          echo "docker run -p 8080:8080 ghcr.io/${{ github.repository }}:latest /app/ramparts server --port 8080 --host 0.0.0.0" >> $GITHUB_STEP_SUMMARY
           echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
