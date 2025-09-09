@@ -158,9 +158,51 @@ Automatically discovers MCP server configurations from:
 - **Line Length**: Extended to 150 lines for complex configuration parsing (see `clippy.toml`)
 - **Async Patterns**: Heavy use of tokio async/await throughout
 
+## Docker Deployment
+
+### Container Images
+The project builds two Docker images:
+- **`Dockerfile`**: MCP server mode (stdio transport) - for integration with MCP hosts
+- **`Deploy-Dockerfile`**: HTTP server mode (web API) - for standalone deployments
+
+### Quick Start with Docker
+```bash
+# MCP Server mode (stdio)
+docker run -it ghcr.io/shadnygren/ramparts:latest
+
+# HTTP Server mode (web API)
+docker run -p 8080:8080 ghcr.io/shadnygren/ramparts-server:latest
+
+# Docker Compose (both modes)
+cp .env.example .env  # Edit with your API keys
+docker-compose up
+```
+
+### Development with Docker
+```bash
+# Build locally
+docker build -t ramparts:local .
+
+# Development mode with Docker Compose
+docker-compose --profile dev up ramparts-dev
+
+# Test different modes
+docker run --rm ramparts:local /app/ramparts --help
+```
+
+### GitHub Container Registry (GHCR)
+Images automatically published to GHCR on:
+- Git tags (releases): `v*.*.*`
+- Main branch pushes
+- `shadnygren/docker` branch pushes
+
+Multi-architecture support: `linux/amd64`, `linux/arm64`
+
 ## Security Considerations
 
 - Never log sensitive authentication headers or tokens
 - Validate all URL inputs to prevent SSRF
 - Sanitize file paths to prevent directory traversal
 - Use TLS for all external HTTP connections (`rustls-tls` feature)
+- Docker images run as non-root user (`ramparts:1001`)
+- Environment variable injection for API keys instead of hardcoded values
