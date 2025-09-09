@@ -1,0 +1,70 @@
+# Build artifacts and cache
+target/
+dist/
+coverage/
+.cargo/
+
+# IDE and editor files
+.vscode/
+.cursor/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Version control
+.git/
+.gitignore
+.gitattributes
+
+# Documentation and examples
+*.md
+!README.md
+docs/
+examples/
+assets/
+
+# CI/CD and development
+.github/
+Makefile
+clippy.toml
+
+# Temporary and log files
+*.log
+*.tmp
+tmp/
+temp/
+
+# Environment and secrets
+.env
+.env.local
+.env.*.local
+secrets/
+
+# Node modules (if any)
+node_modules/
+
+# Tool storage and cache
+tool_storage/
+.cache/
+
+# Test files
+tests/
+*_test.rs
+test_*
+
+# License and other project files
+LICENSE
+LICENSE.*
+CHANGELOG*
+CONTRIBUTING*
+CODE_OF_CONDUCT*
