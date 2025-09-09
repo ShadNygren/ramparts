@@ -1,0 +1,72 @@
+version: '3.8'
+
+services:
+  # Ramparts MCP Server (stdio mode)
+  ramparts-mcp:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ramparts-mcp-server
+    environment:
+      - RAMPARTS_MCP_STDIO=1
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-your_openai_api_key_here}
+      - LLM_MODEL=${LLM_MODEL:-gpt-4}
+      - LLM_URL=${LLM_URL:-https://api.openai.com/v1}
+    volumes:
+      # Mount Docker socket for scanning Docker-based MCP servers
+      - /var/run/docker.sock:/var/run/docker.sock
+      # Mount custom rules directory (optional)
+      - ./rules:/app/rules:ro
+      # Mount custom config (optional)
+      - ./config.yaml:/app/config.yaml:ro
+    stdin_open: true
+    tty: true
+    restart: unless-stopped
+
+  # Ramparts HTTP Server (web API mode)
+  ramparts-server:
+    build:
+      context: .
+      dockerfile: Deploy-Dockerfile
+    container_name: ramparts-http-server
+    ports:
+      - "8080:8080"
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-your_openai_api_key_here}
+      - LLM_MODEL=${LLM_MODEL:-gpt-4}
+      - LLM_URL=${LLM_URL:-https://api.openai.com/v1}
+    volumes:
+      # Mount custom rules directory (optional)
+      - ./rules:/app/rules:ro
+      # Mount custom config (optional)
+      - ./config.yaml:/app/config.yaml:ro
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    restart: unless-stopped
+    depends_on:
+      - ramparts-mcp
+
+  # Development version with local build
+  ramparts-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: builder
+    container_name: ramparts-dev
+    volumes:
+      - .:/app
+      - /var/run/docker.sock:/var/run/docker.sock
+    working_dir: /app
+    command: /bin/bash
+    stdin_open: true
+    tty: true
+    profiles:
+      - dev
+
+networks:
+  default:
+    name: ramparts-network
