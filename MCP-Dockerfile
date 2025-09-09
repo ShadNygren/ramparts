@@ -23,7 +23,6 @@ RUN mkdir src && \
 # Copy actual source code
 COPY src ./src
 COPY rules ./rules
-COPY assets ./assets
 
 # Build the application
 RUN cargo build --release
