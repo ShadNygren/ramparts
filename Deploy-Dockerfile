@@ -1,11 +1,34 @@
 FROM ubuntu:24.04
-LABEL maintainer="Akhil Raj"
+LABEL maintainer="ShadNygren"
+LABEL org.opencontainers.image.title="Ramparts Deploy Server"
+LABEL org.opencontainers.image.description="Ramparts MCP security scanner running in server mode"
+LABEL org.opencontainers.image.source="https://github.com/ShadNygren/ramparts"
+
+# Install runtime dependencies and create non-root user
+RUN apt-get update && apt-get install -y \
+    ca-certificates \
+    curl \
+    && addgroup --system --gid 1001 ramparts \
+    && adduser --system --uid 1001 --gid 1001 ramparts \
+    && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
-COPY target/release/ramparts /app/
-COPY rules /app/rules
-COPY config.yaml /app/
+
+# Copy application binary and required files
+COPY --chown=ramparts:ramparts target/release/ramparts /app/
+COPY --chown=ramparts:ramparts rules /app/rules
+COPY --chown=ramparts:ramparts config.yaml /app/
+
+# Set executable permissions
+RUN chmod +x /app/ramparts
+
+# Add health check
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost:8080/health || exit 1
+
+# Switch to non-root user
+USER ramparts
 
 EXPOSE 8080
 
-ENTRYPOINT [ "/app/ramparts", "server", "--port", "8080", "--host", "0.0.0.0" ]
+ENTRYPOINT ["/app/ramparts", "server", "--port", "8080", "--host", "0.0.0.0"]
