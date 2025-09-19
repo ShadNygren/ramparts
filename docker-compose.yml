@@ -27,7 +27,7 @@ services:
   ramparts-server:
     build:
       context: .
-      dockerfile: Deploy-Dockerfile
+      dockerfile: Dockerfile
     container_name: ramparts-http-server
     ports:
       - "8080:8080"
@@ -35,6 +35,7 @@ services:
       - OPENAI_API_KEY=${OPENAI_API_KEY:-your_openai_api_key_here}
       - LLM_MODEL=${LLM_MODEL:-gpt-4}
       - LLM_URL=${LLM_URL:-https://api.openai.com/v1}
+    command: ["/app/ramparts", "server", "--port", "8080", "--host", "0.0.0.0"]
     volumes:
       # Mount custom rules directory (optional)
       - ./rules:/app/rules:ro
