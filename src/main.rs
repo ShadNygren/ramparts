@@ -180,8 +180,14 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         Ok(cli) => cli,
         Err(e) => {
             // This handles --help, --version, and error cases
-            e.print()?;
-            std::process::exit(if e.use_stderr() { 1 } else { 0 });
+            // Use eprintln/println directly to ensure output works in all environments
+            if e.use_stderr() {
+                eprintln!("{}", e);
+                std::process::exit(1);
+            } else {
+                println!("{}", e);
+                std::process::exit(0);
+            }
         }
     };
 
