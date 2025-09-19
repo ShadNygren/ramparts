@@ -30,7 +30,7 @@ use utils::error_utils;
 #[command(
     name = "ramparts",
     about = "A CLI tool for scanning Model Context Protocol (MCP) servers",
-    version,
+    version = env!("CARGO_PKG_VERSION"),
     long_about = "Scans MCP servers to discover available tools, resources, and capabilities with comprehensive security analysis.
 
 SECURITY ASSESSMENTS:
