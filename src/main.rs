@@ -175,7 +175,16 @@ enum Commands {
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let cli = Cli::parse();
+    // Use try_parse to handle --help and --version ourselves
+    let cli = match Cli::try_parse() {
+        Ok(cli) => cli,
+        Err(e) => {
+            // This handles --help, --version, and error cases
+            e.print()?;
+            std::process::exit(if e.use_stderr() { 1 } else { 0 });
+        }
+    };
+
     // Do not print banner when running as stdio MCP server to avoid corrupting JSON-RPC stdout
     if !matches!(cli.command, Some(Commands::McpStdio)) {
         display_banner();
