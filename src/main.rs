@@ -66,7 +66,7 @@ EXAMPLES:
 )]
 struct Cli {
     #[command(subcommand)]
-    command: Commands,
+    command: Option<Commands>,
 
     /// Enable verbose logging for detailed operation tracking
     ///
@@ -177,7 +177,7 @@ enum Commands {
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let cli = Cli::parse();
     // Do not print banner when running as stdio MCP server to avoid corrupting JSON-RPC stdout
-    if !matches!(cli.command, Commands::McpStdio) {
+    if !matches!(cli.command, Some(Commands::McpStdio)) {
         display_banner();
     }
 
@@ -258,7 +258,7 @@ fn determine_log_level(cli: &Cli, scanner_config: &ScannerConfig) -> Level {
 /// Creates an MCP scanner instance if needed for the given command
 fn create_scanner_if_needed(cli: &Cli, scanner_config: &ScannerConfig) -> Option<MCPScanner> {
     match &cli.command {
-        Commands::Scan { .. } | Commands::ScanConfig { .. } => {
+        Some(Commands::Scan { .. }) | Some(Commands::ScanConfig { .. }) => {
             match MCPScanner::with_timeout(scanner_config.scanner.http_timeout) {
                 Ok(scanner) => Some(scanner),
                 Err(e) => {
@@ -278,27 +278,31 @@ async fn execute_command(
     scanner: Option<MCPScanner>,
 ) -> Result<(), Box<dyn std::error::Error>> {
     match cli.command {
-        Commands::Scan {
+        None => {
+            // No subcommand provided, clap will have already printed help/version
+            Ok(())
+        }
+        Some(Commands::Scan {
             url,
             auth_headers,
             format,
             report,
-        } => handle_scan_command(url, auth_headers, format, report, &scanner_config, scanner).await,
-        Commands::ScanConfig {
+        }) => handle_scan_command(url, auth_headers, format, report, &scanner_config, scanner).await,
+        Some(Commands::ScanConfig {
             auth_headers,
             format,
             report,
-        } => {
+        }) => {
             handle_scan_config_command(auth_headers, format, report, &scanner_config, scanner).await
         }
-        Commands::InitConfig { force } => {
+        Some(Commands::InitConfig { force }) => {
             handle_init_config_command(force);
             Ok(())
         }
-        Commands::Server { port, host } => handle_server_command(port, host).await,
-        Commands::McpStdio => handle_mcp_stdio_command().await,
-        Commands::McpSse { host, port } => handle_mcp_sse_command(host, port).await,
-        Commands::McpHttp { host, port } => handle_mcp_http_command(host, port).await,
+        Some(Commands::Server { port, host }) => handle_server_command(port, host).await,
+        Some(Commands::McpStdio) => handle_mcp_stdio_command().await,
+        Some(Commands::McpSse { host, port }) => handle_mcp_sse_command(host, port).await,
+        Some(Commands::McpHttp { host, port }) => handle_mcp_http_command(host, port).await,
     }
 }
 
