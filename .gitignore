@@ -31,3 +31,6 @@ scan_*
 # Test artifacts
 test_output/
 scan_results/ 
+test_harness/venv/
+test_harness/__pycache__/
+**/__pycache__/
