@@ -1,44 +1,54 @@
 {
   "name": "Ramparts Development",
-  "image": "mcr.microsoft.com/devcontainers/rust:1-bullseye",
 
-  // Features to add to the dev container
+  // Use the universal image which has everything we need
+  "image": "mcr.microsoft.com/devcontainers/universal:2-linux",
+
+  // Features that are officially supported and will work
   "features": {
     "ghcr.io/devcontainers/features/docker-in-docker:2": {
       "version": "latest",
-      "dockerDashComposeVersion": "v2"
+      "dockerDashComposeVersion": "v2",
+      "installDockerBuildx": true
     },
-    "ghcr.io/devcontainers/features/github-cli:1": {},
-    "ghcr.io/devcontainers/features/python:1": {
-      "version": "3.11"
-    },
-    "ghcr.io/devcontainers/features/common-utils:2": {
-      "installZsh": true,
-      "installOhMyZsh": true,
-      "upgradePackages": true,
-      "nonFreePackages": false
+    "ghcr.io/devcontainers/features/rust:1": {
+      "version": "stable",
+      "profile": "complete"
     }
   },
 
-  // Container environment variables
+  // Environment variables for the container
   "containerEnv": {
     "DOCKER_BUILDKIT": "1",
-    "COMPOSE_DOCKER_CLI_BUILD": "1"
+    "COMPOSE_DOCKER_CLI_BUILD": "1",
+    "RUST_BACKTRACE": "1"
   },
 
-  // Use 'forwardPorts' to make a list of ports inside the container available locally
-  "forwardPorts": [8080, 8081, 3000],
+  // Forward ports for our services
+  "forwardPorts": [
+    8080,  // HTTP server
+    8081,  // Alternative HTTP
+    3000,  // Development server
+    9000   // Testing port
+  ],
 
-  // Use 'postCreateCommand' to run commands after the container is created
-  "postCreateCommand": "bash .devcontainer/post-create.sh",
+  // Run our setup script after container creation
+  "postCreateCommand": "/bin/bash .devcontainer/setup.sh",
 
-  // Configure tool-specific properties
+  // VS Code specific settings
   "customizations": {
     "vscode": {
       "settings": {
         "rust-analyzer.cargo.features": ["all"],
+        "rust-analyzer.checkOnSave.command": "clippy",
         "editor.formatOnSave": true,
-        "terminal.integrated.defaultProfile.linux": "bash"
+        "terminal.integrated.defaultProfile.linux": "bash",
+        "terminal.integrated.profiles.linux": {
+          "bash": {
+            "path": "/bin/bash",
+            "icon": "terminal-bash"
+          }
+        }
       },
       "extensions": [
         "rust-lang.rust-analyzer",
@@ -46,30 +56,33 @@
         "serayuzgur.crates",
         "tamasfe.even-better-toml",
         "ms-azuretools.vscode-docker",
-        "github.copilot",
-        "github.vscode-github-actions"
+        "github.vscode-github-actions",
+        "ms-vscode.makefile-tools"
       ]
     },
     "codespaces": {
       "openFiles": [
         "README.md",
-        "RAMPARTS_REVIEW_2025-09-22.md"
+        "CODESPACE_SETUP.md"
       ]
     }
   },
 
-  // Mounts for persisting data
-  "mounts": [
-    "source=${localWorkspaceFolder}/.devcontainer/cache,target=/home/vscode/.cache,type=bind,consistency=cached"
-  ],
+  // Run as the default codespace user
+  "remoteUser": "codespace",
 
-  // Run as non-root user
-  "remoteUser": "vscode",
-
-  // Additional runtime arguments
+  // Give us the capabilities we need
   "runArgs": [
     "--cap-add=SYS_PTRACE",
     "--security-opt",
-    "seccomp=unconfined"
-  ]
+    "seccomp=unconfined",
+    "--privileged"
+  ],
+
+  // Ensure we have enough resources
+  "hostRequirements": {
+    "cpus": 2,
+    "memory": "4gb",
+    "storage": "32gb"
+  }
 }
