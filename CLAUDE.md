@@ -2,6 +2,14 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## ⚠️ CRITICAL BUILD REQUIREMENT
+
+**ONLY use GitHub Actions for building Docker images and Rust binaries!**
+
+DO NOT use local Docker builds on development machines due to CPU instruction set incompatibilities. The development laptop has an Intel Ivy Bridge CPU (no AVX2 support) which causes silent failures when Rust dependencies are compiled with modern CPU optimizations.
+
+All builds MUST be done via GitHub Actions which have modern CPUs with full instruction set support.
+
 ## Project Overview
 
 **Ramparts** is a security scanner for Model Context Protocol (MCP) servers written in Rust. It analyzes MCP endpoints to identify available tools, resources, and potential security vulnerabilities including tool poisoning, injection attacks, and data leakage.
@@ -206,3 +214,75 @@ Multi-architecture support: `linux/amd64`, `linux/arm64`
 - Use TLS for all external HTTP connections (`rustls-tls` feature)
 - Docker images run as non-root user (`ramparts:1001`)
 - Environment variable injection for API keys instead of hardcoded values
+
+## Critical Issues and Context (2025-09-22)
+
+### 🚨 CRITICAL FAILURE: RMCP Library Completely Broken
+The rmcp library is **fundamentally broken** and cannot be used for MCP servers:
+
+1. **Macro System Broken**: Tool registration macros don't work (tested v0.3.2 and v0.6.4)
+   - Non-existent macros were referenced (`#[tool_router]`, `#[tool_handler]`)
+   - Correct `tool_box!` macro also fails
+   - Manual registration workaround implemented
+
+2. **Stdio Transport Dead**: MCP server doesn't respond to ANY protocol messages
+   - No response to initialize, tools/list, or any JSON-RPC messages
+   - Debug output never appears - failure occurs before our code runs
+   - Binary runs (`--version` exits 0) but stdio communication is completely silent
+
+3. **All Workarounds Failed**:
+   - ❌ Manual tool registration never executes (stdio fails first)
+   - ❌ Upgraded to rmcp v0.6.4 - still broken
+   - ❌ Used Ivy Bridge CPU compatibility - binary runs but MCP dead
+
+**Current Status**: Project is **BLOCKED** - cannot proceed without replacing rmcp library entirely.
+
+See RAMPARTS_FIXES.md, RMCP_MACRO_ANALYSIS.md, and MANUAL_REGISTRATION_STATUS.md for full investigation details.
+
+### Key Technical Findings
+
+#### rmcp Library Versions Tested
+- **v0.3.2** (crates.io): Macro system broken, stdio transport dead
+- **v0.6.4** (modelcontextprotocol/rust-sdk): Latest official, same failures
+- **v0.1.5** (4t145/rmcp): Archived fork we mistakenly investigated
+
+#### Docker Build Considerations
+- **CPU Targeting**: Use `RUSTFLAGS="-C target-cpu=ivybridge"` for older CPUs (no AVX2)
+- **Multiple Dockerfiles**: `Dockerfile.AVX_only` exists for CPU compatibility
+- **Non-root user**: ramparts:1001 for security
+
+#### Testing Infrastructure
+The `test_harness/` directory contains comprehensive MCP testing tools:
+- `mcp_test_harness.py` - FastMCP-based testing framework
+- `test_ramparts_mcp_stdio.py` - Stdio transport testing
+- `test_docker_tools.py` - Tool discovery testing
+
+### Version Naming Convention
+Using ISO-8601 datetime format for Docker image tags:
+- Format: `vYYYY-MM-DDtHH-MM`
+- Example: `v2025-09-21t12-30`
+
+### Background Processes Warning
+When resuming work, be aware that multiple Docker builds may be running in background. Use `docker ps` and `jobs` to check status.
+
+### Current State (2025-09-22)
+
+#### Code Changes
+- `src/mcp_server.rs` - Manual tool registration implemented (correct but never executes)
+- `Cargo.toml` - Currently using rmcp v0.6.4 (also tested v0.3.2)
+- `Dockerfile.AVX_only` - CPU compatibility for Ivy Bridge
+
+#### Docker Images Built
+- `ramparts:manual-tools-v1` - rmcp v0.3.2 with manual registration
+- `ramparts:v064-manual-tools` - rmcp v0.6.4 with manual registration
+- Both images: Binary runs but MCP completely silent
+
+#### Test Infrastructure
+- `test_mcp_complete.py` - Comprehensive MCP protocol tester
+- `test_manual_registration.py` - Manual registration verification
+- All tests show: No response from MCP server
+# important-instruction-reminders
+Do what has been asked; nothing more, nothing less.
+NEVER create files unless they're absolutely necessary for achieving your goal.
+ALWAYS prefer editing an existing file to creating a new one.
+NEVER proactively create documentation files (*.md) or README files. Only create documentation files if explicitly requested by the User.
