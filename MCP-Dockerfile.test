@@ -1,0 +1,29 @@
+# MCP-Dockerfile - For running Ramparts as an MCP server
+# This Dockerfile uses pre-built binaries from GitHub Actions artifacts
+# to avoid CPU compatibility issues and build failures
+
+FROM ubuntu:24.04
+LABEL maintainer="Ramparts Team"
+
+# Install minimal runtime dependencies for MCP stdio operation
+RUN apt-get update && apt-get install -y \
+    ca-certificates \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Create app directory
+WORKDIR /app
+
+# Copy pre-built binary and required files from build context
+# These are downloaded as artifacts in the GitHub Actions workflow
+COPY target/release/ramparts /app/
+COPY rules /app/rules
+
+# Create config.yaml if it doesn't exist in the build context
+COPY config.yaml* /app/
+
+# Make sure the binary is executable
+RUN chmod +x /app/ramparts
+
+# Default: run as MCP stdio server (MCP Toolkit/hosts connect over stdio)
+ENTRYPOINT ["/app/ramparts", "mcp-stdio"]

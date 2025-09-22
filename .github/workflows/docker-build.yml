@@ -206,11 +206,11 @@ jobs:
             type=sha,prefix={{branch}}-
             type=raw,value=latest,enable={{is_default_branch}}
 
-      - name: Build and push MCP Docker image
+      - name: Build and push MCP Docker image (test version)
         uses: docker/build-push-action@v5
         with:
           context: .
-          file: ./MCP-Dockerfile
+          file: ./MCP-Dockerfile.test
           push: ${{ github.event_name != 'pull_request' || inputs.push_images }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
@@ -247,7 +247,7 @@ jobs:
       - name: Build test images locally
         run: |
           docker build -f Deploy-Dockerfile -t ramparts-server:test .
-          docker build -f MCP-Dockerfile -t ramparts-mcp:test .
+          docker build -f MCP-Dockerfile.test -t ramparts-mcp:test .
 
       - name: Test Deploy Docker image
         run: |
