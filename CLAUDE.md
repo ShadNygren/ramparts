@@ -14,6 +14,10 @@ All builds MUST be done via GitHub Actions which have modern CPUs with full inst
 
 **Ramparts** is a security scanner for Model Context Protocol (MCP) servers written in Rust. It analyzes MCP endpoints to identify available tools, resources, and potential security vulnerabilities including tool poisoning, injection attacks, and data leakage.
 
+### Critical Security Context
+
+Industry research revealed that **23% of public MCP servers contain command injection vulnerabilities** (May 2025), and a critical vulnerability in the official GitHub MCP integration allowed attackers to hijack AI agents through prompt injection. Ramparts addresses these urgent security needs by providing comprehensive vulnerability detection for the MCP ecosystem.
+
 ## Development Commands
 
 ### Building and Testing
@@ -35,6 +39,10 @@ cargo test --test integration_tests
 make fmt
 cargo fmt
 
+# Format check (CI verification)
+cargo fmt --all -- --check
+make fmt-check
+
 # Lint with clippy
 make lint
 cargo clippy --all-features -- -D warnings
@@ -48,25 +56,39 @@ make audit
 cargo audit
 
 # Full CI quality checks (run before PR)
-make ci-check
+make ci-check  # Includes format, clippy, tests, audit
 ```
 
 ### Running the Application
 ```bash
 # Scan a single MCP server
 cargo run -- scan http://localhost:3000
+cargo run -- scan http://localhost:3000 --format json
 
-# Scan IDE configurations (discovers from Cursor, VS Code, etc.)
+# With authentication headers
+cargo run -- scan https://api.example.com/mcp --auth-headers "Authorization: Bearer TOKEN"
+
+# Scan IDE configurations (discovers from Cursor, VS Code, Windsurf, etc.)
 cargo run -- scan-config
+cargo run -- scan-config --format json --report
 
 # Start as HTTP microservice
-cargo run -- server --port 3000
+cargo run -- server --port 3000 --host 0.0.0.0
 
 # Run as MCP server (stdio transport)
 cargo run -- mcp-stdio
 
+# Run as MCP server (SSE transport)
+cargo run -- mcp-sse --port 8000
+
+# Run as MCP server (HTTP streamable transport)
+cargo run -- mcp-http --port 8081
+
+# Start proxy with Javelin Guardrails
+cargo run -- proxy 127.0.0.1:8080
+
 # Initialize configuration file
-cargo run -- init-config
+cargo run -- init-config [--force]
 ```
 
 ### Multi-Architecture Builds
@@ -93,10 +115,13 @@ make package
 - **`src/mcp_client.rs`**: MCP protocol client implementation supporting HTTP, SSE, and stdio transports
 - **`src/mcp_server.rs`**: MCP server implementation (Ramparts as an MCP server)
 - **`src/security/`**: Security analysis modules including YARA-based static analysis and LLM-powered assessments
-- **`src/server.rs`**: HTTP microservice for continuous monitoring
+- **`src/server.rs`**: HTTP microservice for continuous monitoring (Axum-based)
 - **`src/config.rs`**: Configuration management for scanner settings and security rules
 - **`src/types.rs`**: Core data structures and scan options
 - **`src/utils.rs`**: Utility functions for output formatting and reporting
+- **`src/cache.rs`**: Caching layer for scan results
+- **`common/`**: Shared utilities between main and proxy modules (255 lines)
+- **`proxy/`**: MCP proxy implementation with Javelin Guardrails integration
 
 ### Security Analysis Pipeline
 
@@ -150,14 +175,22 @@ Automatically discovers MCP server configurations from:
 ## Testing
 
 ### Test Structure
-- Unit tests embedded in modules
-- Integration tests in `src/integration_tests.rs`
-- CI tests via `make ci-check`
+- **Unit tests**: Embedded in modules (79 test functions)
+- **Integration tests**: `src/integration_tests.rs` (13 test modules)
+- **CI tests**: via `make ci-check`
+- **Test harness**: `test_harness/` directory with Python-based MCP testing tools
 
 ### Common Test Patterns
 - Mock MCP servers for transport testing
 - Configuration validation tests
 - Security assessment rule verification
+- FastMCP-based protocol testing
+
+### Test Coverage Gaps
+- Limited test coverage reporting (target: >80%)
+- Missing end-to-end testing scenarios
+- Limited mocking for external dependencies (LLM APIs)
+- No dedicated security vulnerability testing
 
 ## Code Style
 
@@ -165,6 +198,10 @@ Automatically discovers MCP server configurations from:
 - **Linting**: Comprehensive clippy rules with pedantic checks
 - **Line Length**: Extended to 150 lines for complex configuration parsing (see `clippy.toml`)
 - **Async Patterns**: Heavy use of tokio async/await throughout
+- **Error Handling**: Use `anyhow::Result` for main errors, `thiserror` for custom error types
+- **Logging**: Use `tracing` crate with structured logging
+- **Naming**: snake_case for vars/functions, PascalCase for types, SCREAMING_SNAKE for constants
+- **Imports**: Group std, external crates, then local modules with blank lines between
 
 ## Docker Deployment
 
@@ -214,6 +251,13 @@ Multi-architecture support: `linux/amd64`, `linux/arm64`
 - Use TLS for all external HTTP connections (`rustls-tls` feature)
 - Docker images run as non-root user (`ramparts:1001`)
 - Environment variable injection for API keys instead of hardcoded values
+- Prefer `make ci-check` before PRs (format, clippy, tests, audit)
+
+### Critical Security Context (Industry Research)
+- **23% of public MCP servers contain command injection vulnerabilities** (May 2025 research)
+- Critical vulnerability in GitHub MCP integration allowed agent hijacking via prompt injection
+- Widespread OAuth token leakage and authentication bypass issues in MCP ecosystem
+- Ramparts addresses these real-world vulnerabilities with comprehensive security assessments
 
 ## Critical Issues and Context (2025-09-22)
 
