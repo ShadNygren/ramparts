@@ -94,7 +94,7 @@ yara-x = { version = "1.4", optional = true }
 # Official Rust MCP SDK
 # Official Rust MCP SDK (client + server)
 # Enable server + macros and server stdio transport for MCP server implementation
-rmcp = { version = "0.3.2", features = [
+rmcp = { version = "0.6.4", features = [
     "client",
     "server",
     "macros",
