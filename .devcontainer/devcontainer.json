@@ -1,63 +1,24 @@
 {
   "name": "Ramparts Development",
 
-  // Use the universal image which has everything we need
-  "image": "mcr.microsoft.com/devcontainers/universal:2-linux",
+  // Use a smaller base image that won't blow up the disk
+  "image": "mcr.microsoft.com/devcontainers/base:ubuntu-22.04",
 
-  // Features that are officially supported and will work
-  "features": {
-    "ghcr.io/devcontainers/features/docker-in-docker:2": {
-      "version": "latest",
-      "dockerDashComposeVersion": "v2",
-      "installDockerBuildx": true
-    },
-    "ghcr.io/devcontainers/features/rust:1": {
-      "version": "stable",
-      "profile": "complete"
-    }
-  },
+  // Run our setup script
+  "postCreateCommand": "bash .devcontainer/setup.sh",
 
-  // Environment variables for the container
-  "containerEnv": {
-    "DOCKER_BUILDKIT": "1",
-    "COMPOSE_DOCKER_CLI_BUILD": "1",
-    "RUST_BACKTRACE": "1"
-  },
+  // Forward ports
+  "forwardPorts": [8080, 8081, 3000],
 
-  // Forward ports for our services
-  "forwardPorts": [
-    8080,  // HTTP server
-    8081,  // Alternative HTTP
-    3000,  // Development server
-    9000   // Testing port
-  ],
-
-  // Run our setup script after container creation
-  "postCreateCommand": "/bin/bash .devcontainer/setup.sh",
-
-  // VS Code specific settings
+  // Basic customizations
   "customizations": {
     "vscode": {
       "settings": {
-        "rust-analyzer.cargo.features": ["all"],
-        "rust-analyzer.checkOnSave.command": "clippy",
-        "editor.formatOnSave": true,
-        "terminal.integrated.defaultProfile.linux": "bash",
-        "terminal.integrated.profiles.linux": {
-          "bash": {
-            "path": "/bin/bash",
-            "icon": "terminal-bash"
-          }
-        }
+        "terminal.integrated.defaultProfile.linux": "bash"
       },
       "extensions": [
-        "rust-lang.rust-analyzer",
-        "vadimcn.vscode-lldb",
-        "serayuzgur.crates",
-        "tamasfe.even-better-toml",
         "ms-azuretools.vscode-docker",
-        "github.vscode-github-actions",
-        "ms-vscode.makefile-tools"
+        "github.vscode-github-actions"
       ]
     },
     "codespaces": {
@@ -66,23 +27,5 @@
         "CODESPACE_SETUP.md"
       ]
     }
-  },
-
-  // Run as the default codespace user
-  "remoteUser": "codespace",
-
-  // Give us the capabilities we need
-  "runArgs": [
-    "--cap-add=SYS_PTRACE",
-    "--security-opt",
-    "seccomp=unconfined",
-    "--privileged"
-  ],
-
-  // Ensure we have enough resources
-  "hostRequirements": {
-    "cpus": 2,
-    "memory": "4gb",
-    "storage": "32gb"
   }
 }
