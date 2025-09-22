@@ -3,6 +3,11 @@ set -e
 
 echo "🚀 Setting up Ramparts development environment..."
 
+# Install essential tools
+echo "📦 Installing essential tools..."
+sudo apt-get update
+sudo apt-get install -y jq curl wget build-essential pkg-config libssl-dev
+
 # Install Rust toolchain and components
 echo "📦 Installing Rust toolchain..."
 rustup component add rustfmt clippy
