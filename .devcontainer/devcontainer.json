@@ -1,0 +1,71 @@
+{
+  "name": "Ramparts Development",
+  "image": "mcr.microsoft.com/devcontainers/rust:1-bullseye",
+
+  // Features to add to the dev container
+  "features": {
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {
+      "version": "latest",
+      "dockerDashComposeVersion": "v2"
+    },
+    "ghcr.io/devcontainers/features/github-cli:1": {},
+    "ghcr.io/devcontainers/features/python:1": {
+      "version": "3.11"
+    },
+    "ghcr.io/devcontainers-contrib/features/jq:1": {},
+    "ghcr.io/devcontainers-contrib/features/curl:1": {}
+  },
+
+  // Container environment variables
+  "containerEnv": {
+    "DOCKER_BUILDKIT": "1",
+    "COMPOSE_DOCKER_CLI_BUILD": "1"
+  },
+
+  // Use 'forwardPorts' to make a list of ports inside the container available locally
+  "forwardPorts": [8080, 8081, 3000],
+
+  // Use 'postCreateCommand' to run commands after the container is created
+  "postCreateCommand": "bash .devcontainer/post-create.sh",
+
+  // Configure tool-specific properties
+  "customizations": {
+    "vscode": {
+      "settings": {
+        "rust-analyzer.cargo.features": ["all"],
+        "editor.formatOnSave": true,
+        "terminal.integrated.defaultProfile.linux": "bash"
+      },
+      "extensions": [
+        "rust-lang.rust-analyzer",
+        "vadimcn.vscode-lldb",
+        "serayuzgur.crates",
+        "tamasfe.even-better-toml",
+        "ms-azuretools.vscode-docker",
+        "github.copilot",
+        "github.vscode-github-actions"
+      ]
+    },
+    "codespaces": {
+      "openFiles": [
+        "README.md",
+        "RAMPARTS_REVIEW_2025-09-22.md"
+      ]
+    }
+  },
+
+  // Mounts for persisting data
+  "mounts": [
+    "source=${localWorkspaceFolder}/.devcontainer/cache,target=/home/vscode/.cache,type=bind,consistency=cached"
+  ],
+
+  // Run as non-root user
+  "remoteUser": "vscode",
+
+  // Additional runtime arguments
+  "runArgs": [
+    "--cap-add=SYS_PTRACE",
+    "--security-opt",
+    "seccomp=unconfined"
+  ]
+}
