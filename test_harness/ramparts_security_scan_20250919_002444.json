@@ -1,0 +1,198 @@
+{
+  "title": "Ramparts MCP Security Scan Report",
+  "timestamp": "2025-09-19T00:24:44.315842",
+  "scanner_version": "Ramparts v0.7.0",
+  "target": "http://localhost:3000/mcp",
+  "executive_summary": "Risk Level: HIGH\nSecurity Score: 65/100\nVulnerabilities Found: 4\n\nThe MCP server has significant security concerns that should be addressed.\n\nThe scan identified 4 potential security issue(s) across the MCP server's tools and resources.\nImmediate action is recommended to address the findings.",
+  "scan_results": {
+    "target": "http://localhost:3000/mcp",
+    "scan_time": "2025-09-19T00:24:44.315873",
+    "protocol": "MCP",
+    "server_info": {
+      "name": "Ramparts Security Scanner",
+      "version": "0.7.0",
+      "transport": "HTTP/SSE",
+      "capabilities": [
+        "tools",
+        "resources",
+        "prompts"
+      ]
+    },
+    "findings": {
+      "tools": [
+        {
+          "name": "scan",
+          "risk_level": "LOW",
+          "description": "MCP server security scanning tool",
+          "input_schema": {
+            "url": "string",
+            "detailed": "boolean"
+          },
+          "security_issues": []
+        },
+        {
+          "name": "scan-config",
+          "risk_level": "MEDIUM",
+          "description": "IDE configuration scanning tool",
+          "input_schema": {
+            "path": "string"
+          },
+          "security_issues": [
+            {
+              "type": "PATH_TRAVERSAL",
+              "severity": "MEDIUM",
+              "description": "Tool accepts filesystem paths that could potentially access sensitive files",
+              "recommendation": "Implement strict path validation and sandboxing",
+              "cwe": "CWE-22"
+            }
+          ]
+        },
+        {
+          "name": "execute-yara",
+          "risk_level": "HIGH",
+          "description": "Execute YARA rules on target files",
+          "input_schema": {
+            "rule": "string",
+            "target": "string"
+          },
+          "security_issues": [
+            {
+              "type": "CODE_INJECTION",
+              "severity": "HIGH",
+              "description": "Tool executes user-provided YARA rules without sufficient validation",
+              "recommendation": "Implement YARA rule sandboxing and validation",
+              "cwe": "CWE-94"
+            },
+            {
+              "type": "RESOURCE_EXHAUSTION",
+              "severity": "MEDIUM",
+              "description": "Complex YARA rules could cause CPU/memory exhaustion",
+              "recommendation": "Add resource limits and timeout controls",
+              "cwe": "CWE-400"
+            }
+          ]
+        }
+      ],
+      "resources": [
+        {
+          "name": "vulnerability-database",
+          "uri": "mcp://ramparts/vulndb",
+          "risk_level": "LOW",
+          "description": "Read-only vulnerability database",
+          "security_issues": []
+        },
+        {
+          "name": "scan-results",
+          "uri": "mcp://ramparts/results/*",
+          "risk_level": "MEDIUM",
+          "description": "Historical scan results storage",
+          "security_issues": [
+            {
+              "type": "INFORMATION_DISCLOSURE",
+              "severity": "MEDIUM",
+              "description": "May expose sensitive information from previous scans",
+              "recommendation": "Implement access controls and data sanitization",
+              "cwe": "CWE-200"
+            }
+          ]
+        }
+      ],
+      "prompts": [
+        {
+          "name": "analyze-security",
+          "risk_level": "LOW",
+          "description": "Analyze security implications of MCP configurations",
+          "security_issues": []
+        }
+      ],
+      "overall_risk": "HIGH"
+    },
+    "vulnerabilities_found": [
+      {
+        "category": "Input Validation",
+        "severity": "HIGH",
+        "description": "YARA rule execution accepts user-provided rules without validation",
+        "affected_tools": [
+          "execute-yara"
+        ],
+        "cve": null,
+        "cwe": "CWE-94",
+        "recommendation": "Implement strict YARA rule validation and sandboxing",
+        "exploit_difficulty": "MEDIUM",
+        "impact": "Remote code execution potential through malicious YARA rules"
+      },
+      {
+        "category": "Path Traversal",
+        "severity": "MEDIUM",
+        "description": "Configuration scanning tool accepts arbitrary filesystem paths",
+        "affected_tools": [
+          "scan-config"
+        ],
+        "cve": null,
+        "cwe": "CWE-22",
+        "recommendation": "Restrict path access to specific directories",
+        "exploit_difficulty": "LOW",
+        "impact": "Potential access to sensitive configuration files"
+      },
+      {
+        "category": "Information Disclosure",
+        "severity": "MEDIUM",
+        "description": "Historical scan results may contain sensitive information",
+        "affected_resources": [
+          "scan-results"
+        ],
+        "cve": null,
+        "cwe": "CWE-200",
+        "recommendation": "Implement access controls and data retention policies",
+        "exploit_difficulty": "LOW",
+        "impact": "Exposure of previously scanned server configurations"
+      },
+      {
+        "category": "Resource Exhaustion",
+        "severity": "MEDIUM",
+        "description": "Complex YARA rules could cause DoS through resource consumption",
+        "affected_tools": [
+          "execute-yara"
+        ],
+        "cve": null,
+        "cwe": "CWE-400",
+        "recommendation": "Add CPU/memory limits and execution timeouts",
+        "exploit_difficulty": "MEDIUM",
+        "impact": "Service disruption through resource exhaustion"
+      }
+    ],
+    "security_score": 65,
+    "summary": "MCP server has significant security concerns requiring immediate attention. High-risk code injection vulnerability found in YARA execution tool.",
+    "scan_metadata": {
+      "scan_duration_ms": 2453,
+      "tools_analyzed": 5,
+      "resources_analyzed": 2,
+      "prompts_analyzed": 1,
+      "yara_rules_applied": 47,
+      "llm_assessments": 8
+    }
+  },
+  "risk_assessment": {
+    "overall_risk": "HIGH",
+    "risk_distribution": {
+      "CRITICAL": 0,
+      "HIGH": 1,
+      "MEDIUM": 3,
+      "LOW": 0
+    },
+    "high_priority_items": 1
+  },
+  "recommendations": [
+    "\u2022 Implement strict YARA rule validation and sandboxing",
+    "\u2022 Restrict path access to specific directories",
+    "\u2022 Implement access controls and data retention policies",
+    "\u2022 Add CPU/memory limits and execution timeouts",
+    "\u2022 Implement comprehensive input validation for all tools"
+  ],
+  "technical_details": {
+    "scan_duration": "N/A",
+    "tools_scanned": 3,
+    "vulnerabilities_found": 4,
+    "security_score": 65
+  }
+}

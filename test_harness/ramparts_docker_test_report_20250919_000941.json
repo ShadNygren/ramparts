@@ -1,0 +1,72 @@
+{
+  "title": "Ramparts Docker Image Test Report",
+  "timestamp": "2025-09-19T00:09:36.723650",
+  "duration_seconds": 4.641031,
+  "summary": {
+    "total_tests": 7,
+    "passed": 7,
+    "failed": 0,
+    "success_rate": 100.0
+  },
+  "test_suites": [
+    {
+      "name": "Container Basics",
+      "tests": [
+        {
+          "name": "Container runs",
+          "passed": true,
+          "message": "\u2705 Container runs"
+        },
+        {
+          "name": "Binary exists",
+          "passed": true,
+          "message": "\u2705 Binary found"
+        },
+        {
+          "name": "Binary size",
+          "passed": true,
+          "size_bytes": 442560,
+          "message": "Binary size: 432.2KB"
+        }
+      ]
+    },
+    {
+      "name": "MCP stdio Mode",
+      "tests": [
+        {
+          "name": "MCP Initialize",
+          "passed": true,
+          "response": "",
+          "message": "\u2705 Initialize works"
+        },
+        {
+          "name": "List Tools",
+          "passed": true,
+          "response": "",
+          "message": "\u2705 Tools list works"
+        }
+      ]
+    },
+    {
+      "name": "Ramparts Features",
+      "tests": [
+        {
+          "name": "YARA rules",
+          "passed": true,
+          "message": "\u2705 YARA rules found"
+        },
+        {
+          "name": "Configuration",
+          "passed": true,
+          "message": "Config: not present (OK)"
+        }
+      ]
+    }
+  ],
+  "environment": {
+    "docker_image": "ramparts:local",
+    "test_time": "2025-09-19T00:09:41.364746",
+    "test_harness": "docker_test_report.py"
+  },
+  "conclusion": "\u2705 EXCELLENT - The Ramparts Docker image is fully functional"
+}

@@ -1,0 +1,48 @@
+{
+  "name": "MCP Server Test Configuration",
+  "description": "Example configuration for testing multiple MCP servers",
+  "mcpServers": {
+    "ramparts-http": {
+      "name": "Ramparts HTTP Server",
+      "url": "http://localhost:8080",
+      "description": "Ramparts MCP security scanner in HTTP mode"
+    },
+    "ramparts-sse": {
+      "name": "Ramparts SSE Server",
+      "url": "http://localhost:8081/sse",
+      "description": "Ramparts MCP server with Server-Sent Events transport"
+    },
+    "filesystem-stdio": {
+      "name": "MCP Filesystem Server",
+      "command": "npx",
+      "args": ["@modelcontextprotocol/server-filesystem", "/tmp"],
+      "env": {},
+      "description": "Example stdio-based filesystem MCP server"
+    },
+    "github-http": {
+      "name": "GitHub MCP Server",
+      "url": "https://api.github.com/mcp",
+      "description": "GitHub's MCP server (example, may require auth)"
+    },
+    "docker-ramparts": {
+      "name": "Dockerized Ramparts",
+      "command": "docker",
+      "args": ["run", "-i", "--rm", "ghcr.io/shadnygren/ramparts:latest"],
+      "env": {
+        "OPENAI_API_KEY": "${OPENAI_API_KEY:-}"
+      },
+      "description": "Ramparts running in Docker container with stdio transport"
+    },
+    "local-development": {
+      "name": "Local Dev Server",
+      "url": "http://localhost:3000",
+      "description": "Local development MCP server"
+    }
+  },
+  "testConfig": {
+    "timeout": 30,
+    "verbose": true,
+    "interactive": false,
+    "performanceIterations": 5
+  }
+}
